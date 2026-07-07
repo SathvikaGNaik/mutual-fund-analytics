@@ -1,54 +1,52 @@
-"""
-Load Cleaned CSVs into SQLite
-"""
+from sqlalchemy import create_engine
+import pandas as pd
 
-import sqlite3
+from scripts.utils.config import RAW_DATA, DATABASE
+from scripts.utils.helpers import print_header
 
-from scripts.utils.config import (
-    DATABASE,
-    PROCESSED_DATA,
-    RAW_DATA,
+print_header("LOAD STAR SCHEMA")
+
+engine = create_engine(f"sqlite:///{DATABASE}")
+
+# -----------------------------
+# Load CSV files
+# -----------------------------
+
+fund = pd.read_csv(RAW_DATA / "01_fund_master.csv")
+
+nav = pd.read_csv(RAW_DATA / "02_nav_history.csv")
+
+transactions = pd.read_csv(
+    RAW_DATA / "08_investor_transactions.csv"
 )
 
-from scripts.utils.helpers import (
-    load_csv,
-    print_header,
+performance = pd.read_csv(
+    RAW_DATA / "07_scheme_performance.csv"
 )
 
+# -----------------------------
+# Dimension : Fund
+# -----------------------------
 
-TABLES = {
-    "fund_master": RAW_DATA / "01_fund_master.csv",
-    "nav_history": PROCESSED_DATA / "clean_nav_history.csv",
-    "investor_transactions": PROCESSED_DATA / "clean_investor_transactions.csv",
-    "scheme_performance": PROCESSED_DATA / "clean_scheme_performance.csv",
-}
+dim_fund = fund[
+    [
+        "amfi_code",
+        "scheme_name",
+        "fund_house",
+        "category",
+        "sub_category",
+        "plan",
+        "risk_grade",
+        "benchmark",
+        "sebi_category_code",
+    ]
+]
 
+dim_fund.to_sql(
+    "dim_fund",
+    engine,
+    if_exists="append",
+    index=False,
+)
 
-def main():
-
-    print_header("LOAD DATABASE")
-
-    conn = sqlite3.connect(DATABASE)
-
-    for table_name, file_path in TABLES.items():
-
-        print(f"\nLoading {table_name}...")
-
-        df = load_csv(file_path)
-
-        df.to_sql(
-            table_name,
-            conn,
-            if_exists="replace",
-            index=False,
-        )
-
-        print(f"✓ {len(df)} rows inserted.")
-
-    conn.close()
-
-    print_header("DATABASE LOADING COMPLETED")
-
-
-if __name__ == "__main__":
-    main()
+print(f"dim_fund : {len(dim_fund)} rows")

@@ -1,5 +1,5 @@
 """
-Create SQLite Database
+Create SQLite Database using schema.sql
 """
 
 import sqlite3
@@ -12,17 +12,21 @@ def main():
 
     print_header("CREATE DATABASE")
 
-    DATABASE.parent.mkdir(parents=True, exist_ok=True)
-
     conn = sqlite3.connect(DATABASE)
 
-    print("Database created successfully.")
+    cursor = conn.cursor()
 
-    print(f"\nLocation:\n{DATABASE}")
+    with open("sql/schema.sql", "r", encoding="utf-8") as file:
+
+        schema = file.read()
+
+    cursor.executescript(schema)
+
+    conn.commit()
 
     conn.close()
 
-    print("\nConnection closed.")
+    print("Database and tables created successfully.")
 
 
 if __name__ == "__main__":

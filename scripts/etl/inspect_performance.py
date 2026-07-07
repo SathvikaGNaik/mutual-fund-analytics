@@ -1,25 +1,11 @@
-from scripts.utils.config import RAW_DATA
-from scripts.utils.helpers import load_csv, print_header
+import sqlite3
 
-def main():
-    print_header("SCHEME PERFORMANCE")
+conn = sqlite3.connect("data/db/bluestock_mf.db")
+cursor = conn.cursor()
 
-    df = load_csv(RAW_DATA / "07_scheme_performance.csv")
+cursor.execute("PRAGMA table_info(dim_fund)")
 
-    print("\nShape:")
-    print(df.shape)
+for row in cursor.fetchall():
+    print(row)
 
-    print("\nColumns:")
-    print(df.columns.tolist())
-
-    print("\nData Types:")
-    print(df.dtypes)
-
-    print("\nFirst 5 Rows:")
-    print(df.head())
-
-    print("\nMissing Values:")
-    print(df.isnull().sum())
-
-if __name__ == "__main__":
-    main()
+conn.close()
